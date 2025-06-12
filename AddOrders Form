@@ -1,0 +1,77 @@
+using System;
+using System.Collections.Generic;
+using System.ComponentModel;
+using System.Data;
+using System.Data.OleDb;
+using System.Drawing;
+using System.IO;
+using System.Linq;
+using System.Text;
+using System.Threading.Tasks;
+using System.Windows.Forms;
+
+namespace OptBase
+{
+    public partial class AddOrders : Form
+    {
+        public AddOrders()
+        {
+            InitializeComponent();
+        }
+
+        private void button1_Click(object sender, EventArgs e)
+        {
+            try
+            {
+                Orders main = this.Owner as Orders;
+                if (main != null)
+                {
+                    if (string.IsNullOrWhiteSpace(textBox1.Text) || string.IsNullOrWhiteSpace(textBox2.Text) || string.IsNullOrWhiteSpace(textBox3.Text))
+                    {
+                        MessageBox.Show("Пожалуйста, заполните все поля.");
+                        return;
+                    }
+
+                    string dbPath = Path.Combine(Application.StartupPath, "OptBase.accdb");
+                    string connectionString = $"Provider=Microsoft.ACE.OLEDB.12.0;Data Source={dbPath};Persist Security Info=False;";
+
+                    using (OleDbConnection connection = new OleDbConnection(connectionString))
+                    {
+                        connection.Open();
+
+                        OleDbCommand command = new OleDbCommand("INSERT INTO [Заказы] ([Заказчик], [Код Товара], [Адрес Доставки], [Количество Товара]) VALUES (?, ?, ?, ?)", connection);
+                        command.Parameters.AddWithValue("@Заказчик", textBox1.Text);
+                        command.Parameters.AddWithValue("@Код Товара", textBox2.Text);
+                        command.Parameters.AddWithValue("@Адрес Доставки", textBox3.Text);
+                        command.Parameters.AddWithValue("@Количество Товара", textBox4.Text);
+                        command.ExecuteNonQuery();
+                    }
+                    
+                    DataRow nRow = main.optBaseDataSet.Tables[0].NewRow();
+                    nRow[1] = textBox1.Text;
+                    nRow[2] = textBox2.Text;
+                    nRow[3] = textBox3.Text;
+                    nRow[4] = textBox3.Text;
+
+                    main.optBaseDataSet.Tables[0].Rows.Add(nRow);
+                    main.optBaseDataSet.Tables[0].AcceptChanges();
+                    main.dataGridView1.Refresh();
+
+                    textBox1.Text = "";
+                    textBox2.Text = "";
+                    textBox3.Text = "";
+                    textBox4.Text = "";
+                }
+            }
+            catch (Exception ex)
+            {
+                MessageBox.Show($"Ошибка при сохранении данных: {ex.Message}");
+            }
+        }
+
+        private void button2_Click(object sender, EventArgs e)
+        {
+            Close();
+        }
+    }
+}
